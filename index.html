@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>translate all service</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0,user-scalable=no">
+    <style type="text/css">
+        *{
+            padding: 0; margin: 0;
+            box-sizing: border-box;
+        }
+        .wrap{
+            margin: 5% auto;
+            width: 90%;
+        }
+        textarea{
+            padding: 5px;
+            width: 100%; height: 80px;
+            border: 1px solid #cdcdcd;
+            outline: none;
+        }
+        .section{
+            margin-top: 2%;
+        }
+    </style>
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="wrap">
+        <section class="input-box">
+            <textarea class="J-input"></textarea>
+        </section>
+        <section class="output-box">
+            <div class="section google-box">
+                <h2>Google</h2>
+                <div class="J-google"></div>
+            </div>
+            <div class="section youdao-box">
+                <h2>有道</h2>
+                <div class="J-youdao"></div>
+            </div>
+
+            <div class="section baidu-box">
+                <h2>百度</h2>
+                <div class="J-baidu"></div>
+            </div>
+        </section>
+    </div>
+
+    <script type="text/javascript">
+        function getAjax(opt, callback, errorCallback) {
+            $.getJSON('http://127.0.0.1:8791/api/translate', opt, function(data) {
+                callback(data)
+            }).fail((data) => {
+                errorCallback(data)
+            })
+        }
+
+        function renderHtml(val) {
+            getAjax({
+                api: 'Youdao',
+                q: val
+            }, function(data) {
+                if (data && data.translateResult) {
+                    var resultArr = [];
+                    data.translateResult[0].length > 0 && data.translateResult[0].forEach((item) => {
+                        resultArr.push(item.tgt);
+                    })
+                    $('.J-youdao').html(resultArr);
+                } else {
+                    $('.J-youdao').html('');
+                }
+            }, function() {$('.J-youdao').html('');});
+
+            getAjax({
+                api: 'GoogleCN',
+                q: val
+            }, function(data) {
+                console.log(data)
+                if (data && data.sentences) {
+                    var resultArr = [];
+                    data.sentences.forEach((item) => {
+                        item.backend && resultArr.push(item.trans)
+                    })
+                    $('.J-google').html(resultArr);
+                } else {
+                    $('.J-google').html('');
+                }
+            }, function() {$('.J-google').html('');})
+
+            getAjax({
+                api: 'Baidu',
+                q: val
+            }, function(data) {
+                console.log(data)
+                if (data && data.trans_result) {
+                    $('.J-baidu').html(data.trans_result.data[0].dst);
+                } else {
+                    $('.J-baidu').html('');
+                }
+            }, function() {$('.J-baidu').html('');})
+        }
+        var INPUT_VALUE = '';
+        setTimeout(function() {
+            if ($('.J-input').val() !== INPUT_VALUE) {
+                INPUT_VALUE = $('.J-input').val();
+                renderHtml($('.J-input').val());
+            }
+        }, 1000);
+        $('body').on('blur', '.J-input', function() {
+            var val = $(this).val() || '';
+            INPUT_VALUE = val;
+            renderHtml(val)
+        })
+
+    </script>
+</body>
+</html>
